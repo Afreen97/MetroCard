@@ -33,7 +33,6 @@ public class Composition {
 
         if (res != null) {
             Set keys = res.keySet();
-
             keys.forEach(key -> {
                 Map<String, Object> resultMap = (Map<String, Object>) res.get(key);
                 Person p = (Person) resultMap.get("identity");
@@ -41,6 +40,8 @@ public class Composition {
                 if (existing == null) {
                     existing = zeroN;
                 }
+                if(finalMap.get(p.getPersonType())!=null)
+                    existing = finalMap.get(p.getPersonType())+1;
                 finalMap.put(p.getPersonType(), existing);
 
             });
@@ -48,7 +49,8 @@ public class Composition {
 
         Set personType = finalMap.keySet();
         personType.forEach(item -> {
-            System.out.println(String.valueOf(item) + ' ' + finalMap.get(item).intValue());
+            if(finalMap.get(item)!=null)
+                System.out.println(String.valueOf(item) + ' ' + finalMap.get(item).intValue());
         });
     }
     public static void populateCardBalance(String source,String mc,String person,double discount){
@@ -64,13 +66,17 @@ public class Composition {
     }
 
     public static int getDiscount(String source){
-        return discountBalance.get(source).intValue();
+
+            return discountBalance.getOrDefault(source,0.00).intValue();
+
     }
     private  static void calculateTotalCollectionAndPersonCount (String source,String mc, String person, double discount,String destination) {
         Map individualCount = passengerCountMap.get(destination);
         double centralDiscount=zeroN;
         double airportDiscount=zeroN;
-        if (individualCount != null && individualCount.get(mc) != null && individualCount.get(mc) != null && passengerCountMap.get(source)!=null && passengerCountMap.get(source).get(mc) == null) {//checks whether this person ia already part of the airport if it is, it means this is a return journey
+
+
+        if (individualCount != null && individualCount.get(mc) != null && (passengerCountMap.get(source)==null || passengerCountMap.get(source).get(mc)==null)) {//checks whether this person ia already part of the airport if it is, it means this is a return journey
             // and it also checks that this card is not present in the Central array itself(in case from 2nd onwards)
             if(source.contentEquals("CENTRAL")){
                 centralSum += Calculation.computeTotalCollection(person, discount, cardBalance.get(mc));
@@ -78,22 +84,30 @@ public class Composition {
             }
 
             else{
-                airportSum += Calculation.computeTotalCollection(person, discount, cardBalance.get(mc));
-                airportDiscount=discount*Calculation.computeAmountForAge(person);;
+                    airportSum += Calculation.computeTotalCollection(person, discount, cardBalance.getOrDefault(mc,0));
+                    airportDiscount=discount*Calculation.computeAmountForAge(person);
+
             }
 
 
         } else {
-            if(source.contentEquals("CENTRAL")){
+            if(source.contentEquals("CENTRAL") && cardBalance.get(mc)!=null){
                 centralSum += Calculation.computeTotalCollection(person, zeroN, cardBalance.get(mc)); // this means it is not a return journey
-
             }
 
-            else
-                airportSum += Calculation.computeTotalCollection(person, zeroN, cardBalance.get(mc)); // this means it is not a return journey
+            else {
+                airportSum += Calculation.computeTotalCollection(person, zeroN, cardBalance.getOrDefault(mc, 0)); // this means it is not a return journey
+
+
+            }
         }
-        int balance = Calculation.calculateRemainingBalance(person, cardBalance.get(mc), discount);
-        cardBalance.put(mc, balance);
+
+
+        if(cardBalance.get(mc)!=null){
+            int balance = Calculation.calculateRemainingBalance(person, cardBalance.get(mc), discount);
+            cardBalance.put(mc, balance);
+        }
+
 
         if(centralDiscount> zeroN || airportDiscount > zeroN){
 

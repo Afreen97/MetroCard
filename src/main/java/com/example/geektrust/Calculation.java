@@ -42,6 +42,8 @@ public class Calculation {
         return computedSum;
     }
     public static double computeTotalCollection (String person, double discount, int balance) {
+
+
         double computedSum =computeAmountForAge(person);
         if (discount > zeroN) {
             computedSum = discount * computedSum;
